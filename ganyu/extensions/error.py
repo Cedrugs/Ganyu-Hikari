@@ -10,8 +10,10 @@ logger = logging.getLogger(__name__)
 async def on_error(event: lightbulb.CommandErrorEvent) -> None:
     if isinstance(event.exception, lightbulb.OnlyInGuild):
         pass
+    if isinstance(event.exception, lightbulb.CommandInvocationError):
+        logger.info(event.exception.original)
     else:
-        logger.error(event.exception)
+        print(type(event.exception))
 
 
 def load(bot):

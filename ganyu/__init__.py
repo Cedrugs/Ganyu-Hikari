@@ -8,6 +8,7 @@ import lightbulb
 import hikari
 import logging
 import asyncio
+import miru
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class Extension(object):
     def ready_up(self, extension):
         setattr(self, extension, True)
 
-    def all_ready(self):
+    def all_ready(self) -> bool:
         return all([getattr(self, ext) for ext in extensions_path if ext])
 
 
@@ -50,10 +51,13 @@ class Ganyu(lightbulb.BotApp):
             token=token,
             owner_ids=owner_ids,
             prefix='>',
-            intents=intents
+            intents=intents,
+            help_class=None
         )
 
-    def build(self):
+        miru.load(self)
+
+    def build(self) -> None:
 
         self.subscribe(hikari.StartingEvent, self.on_starting)
         self.subscribe(hikari.StartedEvent, self.on_started)
@@ -66,7 +70,7 @@ class Ganyu(lightbulb.BotApp):
                 type=hikari.ActivityType.PLAYING)
         )
 
-    def setup_extensions(self):
+    def setup_extensions(self) -> None:
         if not extensions_path:
             logger.info('No extensions to load')
         for ext in extensions_path:

@@ -10,6 +10,10 @@ This is a Python Discord Bot, coded using lightbulb-hikari library, and meant to
 - Wish history
 - Fun commands
 
+## Purpose
+
+The purpose of this repository is to share how I coded my bot and inspire you guys. You can self-host the bot, but with a different name/brand, and I don't really recommend it because you are required to have the same database structure/data as me, which I'm not comfortable sharing (sorry).
+
 ## Setup
 Clone this repo to your desktop and run `python -m launcher.py`.
 
