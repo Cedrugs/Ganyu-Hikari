@@ -3,6 +3,7 @@ Ganyu-Hikari
 
 This is a Python Discord Bot, coded using lightbulb-hikari library, and meant to help people with in-game stats, wish histories, and daily reward claiming.
 
+>[**Click Here**](https://discord.com/api/oauth2/authorize?client_id=855340983625580544&permissions=277025769536&scope=bot%20applications.commands) to invite Ganyu to your server.
 
 ## Features
 - Daily reward claim (Hoyolab)
