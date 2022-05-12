@@ -39,7 +39,7 @@ async def statistics_cmd(ctx: lightbulb.Context) -> None:
     end = time()
     ping = (end - start)*1000
 
-    embed = hikari.Embed(colour=Colour.Blue, description=f'Created by {ctx.bot.cache.get_user(563287825882021893)}')
+    embed = hikari.Embed(colour=Colour.blue, description=f'Created by {ctx.bot.cache.get_user(563287825882021893)}')
     embed.set_author(name="Ganyu's Statistics")
     embed.set_footer(text=f"Ping: {ctx.bot.heartbeat_latency*1000:,.2f}ms | Response Time: {ping:,.2f}ms")
 

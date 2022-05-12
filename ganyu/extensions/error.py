@@ -11,9 +11,9 @@ async def on_error(event: lightbulb.CommandErrorEvent) -> None:
     if isinstance(event.exception, lightbulb.OnlyInGuild):
         pass
     if isinstance(event.exception, lightbulb.CommandInvocationError):
-        logger.info(event.exception.original)
+        logger.error(event.exception.original)
     else:
-        print(type(event.exception))
+        logger.error(event.exception)
 
 
 def load(bot):

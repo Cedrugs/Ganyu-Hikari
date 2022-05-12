@@ -42,10 +42,12 @@ def get_syntax(command: t.Union[lightbulb.Command, lightbulb.CommandLike]) -> st
 
     params = []
 
-    for key, value in command.options:
-        if key not in ('self', 'ctx', 'return'):
-            params.append(f"[{key}]" if "NoneType" in str(value) else f"<{key}>")
+    print(command.options)
+
+    for value in command.options.values():
+        key = value.name.replace('_', ' ')
+        params.append(f"[{key}]" if not value.required else f"<{key}")
 
     param = " ".join(params)
 
-    return f"{command.name}{param}"
+    return command.name if param == '' else f'{command.name} {param}'
