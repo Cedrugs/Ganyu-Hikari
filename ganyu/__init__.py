@@ -2,6 +2,7 @@ from utils.json import *
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
 from glob import glob
+from .database import Document
 
 
 import lightbulb
@@ -9,6 +10,7 @@ import hikari
 import logging
 import asyncio
 import miru
+import utils as ut
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ class Extension(object):
         for ext in extensions_path:
             setattr(self, ext, False)
 
-    def ready_up(self, extension):
+    def ready_up(self, extension) -> None:
         setattr(self, extension, True)
 
     def all_ready(self) -> bool:
@@ -35,7 +37,11 @@ class Ganyu(lightbulb.BotApp):
         self._ready = False
         self._extension_ready = Extension
         self.startup_time = None
+
         self.mongo = AsyncIOMotorClient(read_json('config.json')['mongodbConnection'])
+        self.genshin_db = self.mongo['genshinImpact']
+
+        self.genshin_wishes = Document(self.genshin_db, 'wishes')
 
         intents = (
             hikari.Intents.GUILDS
@@ -64,11 +70,42 @@ class Ganyu(lightbulb.BotApp):
         self.subscribe(lightbulb.CommandInvocationEvent, self.on_message)
 
         self.setup_extensions()
+        self.extension_commands()
 
         self.run(activity=hikari.Activity(
                 name='>help | Running on lightbulb hikari',
                 type=hikari.ActivityType.PLAYING)
         )
+
+    def extension_commands(self):
+        extensions = [self.get_plugin(x) for x in self.plugins]
+
+        all_commands = {}
+
+        for extension in extensions:
+
+            commands = [
+                ut.PartialCommand(name=x.name, description=x.description, is_subcommand=False, options=x.options)
+                for x in extension.all_commands if isinstance(x, lightbulb.PrefixCommand)
+            ]
+
+            commands_w_sub = [x for x in extension.raw_commands]
+
+            for command in commands_w_sub:
+                if command.subcommands:
+                    for cmd in command.subcommands:
+                        commands.append(
+                            ut.PartialCommand(
+                                name=f'{command.name} {cmd.name}',
+                                description=cmd.description,
+                                options=cmd.options,
+                                is_subcommand=True
+                            )
+                        )
+
+            all_commands.update({extension.name: commands})
+
+        self.d.commands = all_commands
 
     def setup_extensions(self) -> None:
         if not extensions_path:

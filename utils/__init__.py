@@ -25,3 +25,5 @@ from .json import *
 from .models import *
 from .tools import *
 from .views import *
+from .collections import *
+from .genshin_impact import *

@@ -1,9 +1,13 @@
-__all__ = ('strfdelta', 'format_uptime', 'get_syntax')
+from utils.models import CommandExtra
 
 
 import datetime
 import lightbulb
 import typing as t
+import textwrap
+
+
+__all__ = ('strfdelta', 'format_uptime', 'get_syntax', 'get_command_extra')
 
 
 def strfdelta(tdelta, fmt):
@@ -42,12 +46,35 @@ def get_syntax(command: t.Union[lightbulb.Command, lightbulb.CommandLike]) -> st
 
     params = []
 
-    print(command.options)
-
     for value in command.options.values():
         key = value.name.replace('_', ' ')
-        params.append(f"[{key}]" if not value.required else f"<{key}")
+        params.append(f"[{key}]" if not value.required else f"<{key}>")
 
     param = " ".join(params)
 
     return command.name if param == '' else f'{command.name} {param}'
+
+
+def get_command_extra(docstring: str) -> CommandExtra:
+    """
+    A function to format docstring for discord, because sometime it also shows the code indentation
+    Params:
+     - docstring (str) : The docstring to format
+    Return:
+    - CommandExtra dataclass with example and notes inside.
+    """
+
+    raw_line = [x for x in textwrap.dedent(docstring).split('\n') if not x == '']
+    normal_line = []
+    kwargs = {}
+
+    for idx, line in enumerate(raw_line):
+        if line.startswith('Example:') and idx == 0:
+            kwargs.update({'example': line[9:]})
+        else:
+            normal_line.append(line)
+
+    if normal_line:
+        kwargs.update({'notes': '\n'.join(normal_line)})
+
+    return CommandExtra(**kwargs)

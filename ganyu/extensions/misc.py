@@ -8,11 +8,13 @@ import logging
 import hikari
 
 
-misc_ext = lightbulb.Plugin("Miscellaneous")
+misc_ext = lightbulb.Plugin('Miscellaneous')
+misc_ext.add_checks(lightbulb.guild_only)
+
+
 logger = logging.getLogger(__name__)
 
 
-@lightbulb.add_checks(lightbulb.guild_only)
 @misc_ext.command
 @lightbulb.command(
     name='ping',
@@ -25,7 +27,6 @@ async def ping_cmd(ctx: lightbulb.Context) -> None:
 
 
 # noinspection PyUnresolvedReferences
-@lightbulb.add_checks(lightbulb.guild_only)
 @misc_ext.command
 @lightbulb.command(
     name='statistics',
