@@ -16,8 +16,8 @@ class Colour:
 class CommandExtra:
     """Strings extracted from `commands.callback` function, and parsed to fill the example, and notes field?
     Why? because it's not really available on hikari-lightbulb"""
-    example: str = None
-    notes: str = None
+    example: str = field(default_factory=str)
+    notes: str = field(default=None)
 
 
 @dataclass(frozen=True)
