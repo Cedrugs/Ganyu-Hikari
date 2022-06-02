@@ -76,10 +76,15 @@ class Paginator(nav.NavigatorView):
 
 class ValueView(miru.View):
 
-    def __init__(self, buttons, timeout=30, disable_after_respond=False, delete_after_respond=False, **kwargs):
+    def __init__(
+            self, buttons, timeout=30, disable_after_respond=False, delete_after_respond=False,
+            disable_after_timeout=False, delete_after_tiemout=False, **kwargs
+    ):
         self.value: str = None
         self.disable_after_respond = disable_after_respond
         self.delete_after_respond = delete_after_respond
+        self.delete_after_timeout = delete_after_tiemout
+        self.disable_after_timeout = disable_after_timeout
         self.buttons: t.List[t.Union[str, miru.Button]] = buttons
 
         super().__init__(timeout=timeout, **kwargs)
@@ -94,12 +99,7 @@ class ValueView(miru.View):
 
     async def _callback(self, context: miru.Context) -> None:
         self.value = context.interaction.custom_id
-        await self.stop()
 
-    async def on_timeout(self) -> None:
-        await self.stop()
-
-    async def stop(self) -> None:
         if self.delete_after_respond:
             await self.message.delete()
 
@@ -113,3 +113,19 @@ class ValueView(miru.View):
             await self.message.edit(components=None)
 
         super().stop()
+
+    async def on_timeout(self) -> None:
+        await self.stop()
+
+    async def stop(self) -> None:
+        if self.delete_after_timeout:
+            await self.message.delete()
+
+        elif self.disable_after_timeout:
+            for child in self.children:
+                if isinstance(child, miru.Button):
+                    child.disabled = True
+            await self.message.edit(components=self.build())
+
+        else:
+            await self.message.edit(components=None)
