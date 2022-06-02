@@ -86,10 +86,10 @@ async def help_cmd(ctx: lightbulb.Context) -> None:
                     example = f'```{extra.example.format(prefix=ctx.prefix)}```'
 
                 else:
-                    fields.append(('Example', f'```{ctx.prefix}{get_syntax(command)}```', False))
+                    fields.append(('Example', example, False))
 
                 if extra.notes:
-                    fields.append(('Notes', extra.notes, False))
+                    fields.append(('Notes', extra.notes.format(prefix=ctx.prefix), False))
 
             fields.append(('Example', example, False))
 
