@@ -18,5 +18,5 @@ class GenshinWeapon:
     sub_value: float
     passive: dict
     ascension: dict
-    stats: list
+    stats: dict
     location: str
