@@ -42,6 +42,8 @@ class Ganyu(lightbulb.BotApp):
         self.genshin_db = self.mongo['genshinImpact']
 
         self.genshin_wishes = Document(self.genshin_db, 'wishes')
+        self.genshin_weapons = Document(self.genshin_db, 'weapons')
+        self.genshin_weapons_list = []
 
         intents = (
             hikari.Intents.GUILDS
@@ -127,6 +129,9 @@ class Ganyu(lightbulb.BotApp):
 
         self.startup_time = datetime.utcnow()
         self._ready = True
+
+        self.genshin_weapons_list = [x['_id'] for x in await self.genshin_weapons.get_all()]
+
         logger.info(f'Bot started and connected to {self.get_me()} ({self.heartbeat_latency*1000:.2f}ms)')
 
     async def on_message(self, event: lightbulb.CommandInvocationEvent) -> None:

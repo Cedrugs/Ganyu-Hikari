@@ -1,3 +1,5 @@
+from .models import GenshinWeapon
+
 import genshin
 import difflib
 
@@ -70,7 +72,30 @@ async def get_weapon_info(key: str, collection, weapon_key):
     weapon_name = difflib.get_close_matches(key, weapon_key, cutoff=0.3)
     if not weapon_name:
         return None
-    return await collection.find_by_id(weapon_name[0])
+    weapon = await collection.find_by_id(weapon_name[0])
+
+    unused_key = [
+        'passiveDesc', 'passiveName', 'ascensionSummary', 'ascension', 'stats', 'visualStats', 'cleanName',
+        'baseAtk', 'maxLevel', 'subValue', 'subStat'
+    ]
+
+    new_dict = {
+        'name': weapon['cleanName'],
+        'base_atk': weapon['baseAtk'],
+        'max_level': weapon['maxLevel'],
+        'sub_value': weapon['subValue'],
+        'substat': weapon['subStat'],
+        'passive': {'name': weapon['passiveName'], 'description': weapon['passiveDesc']},
+        'ascension': {'levels': weapon['ascension'], 'summary': weapon['ascensionSummary']},
+        'stats': {'list': weapon['stats'], 'visual': weapon['visualStats']}
+    }
+
+    for x in unused_key:
+        weapon.pop(x)
+
+    weapon.update(new_dict)
+
+    return GenshinWeapon(**weapon)
 
 
 async def get_character_info(key: str, collection, character_key):
