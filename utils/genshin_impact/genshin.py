@@ -1,4 +1,4 @@
-from .models import GenshinWeapon
+from .models import GenshinWeapon, GenshinStatistics, GenshinAscensionMaterial, GenshinWeaponPassive
 
 import genshin
 import difflib
@@ -68,7 +68,7 @@ def shorten_name(name: str) -> str:
     return new_name
 
 
-async def get_weapon_info(key: str, collection, weapon_key):
+async def get_weapon_info(key: str, collection, weapon_key) -> GenshinWeapon:
     weapon_name = difflib.get_close_matches(key, weapon_key, cutoff=0.3)
     if not weapon_name:
         return None
@@ -76,18 +76,19 @@ async def get_weapon_info(key: str, collection, weapon_key):
 
     unused_key = [
         'passiveDesc', 'passiveName', 'ascensionSummary', 'ascension', 'stats', 'visualStats', 'cleanName',
-        'baseAtk', 'maxLevel', 'subValue', 'subStat'
+        'baseAtk', 'maxLevel', 'subValue', 'subStat', '_id'
     ]
 
     new_dict = {
+        'id': weapon['_id'],
         'name': weapon['cleanName'],
         'base_atk': weapon['baseAtk'],
         'max_level': weapon['maxLevel'],
         'sub_value': weapon['subValue'],
         'substat': weapon['subStat'],
-        'passive': {'name': weapon['passiveName'], 'description': weapon['passiveDesc']},
-        'ascension': {'levels': weapon['ascension'], 'summary': weapon['ascensionSummary']},
-        'stats': {'list': weapon['stats'], 'visual': weapon['visualStats']}
+        'passive': GenshinWeaponPassive(name=weapon['passiveName'], description=weapon['passiveDesc']),
+        'ascension': GenshinAscensionMaterial(levels=weapon['ascension'], summary=weapon['ascensionSummary']),
+        'stats': GenshinStatistics(list=weapon['stats'], visual=weapon['visualStats'])
     }
 
     for x in unused_key:

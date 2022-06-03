@@ -1,12 +1,30 @@
 from dataclasses import dataclass
 
 
-__all__ = ('GenshinWeapon', )
+__all__ = ('GenshinWeapon', 'GenshinStatistics', 'GenshinAscensionMaterial', 'GenshinWeaponPassive')
+
+
+@dataclass(frozen=True)
+class GenshinStatistics:
+    list: list
+    visual: str
+
+
+@dataclass(frozen=True)
+class GenshinAscensionMaterial:
+    levels: dict
+    summary: dict
+
+
+@dataclass(frozen=True)
+class GenshinWeaponPassive:
+    name: str
+    description: str
 
 
 @dataclass(frozen=True)
 class GenshinWeapon:
-    _id: str
+    id: str
     name: str
     description: str
     icon: str
@@ -16,7 +34,7 @@ class GenshinWeapon:
     base_atk: int
     substat: str
     sub_value: float
-    passive: dict
-    ascension: dict
-    stats: dict
+    passive: GenshinWeaponPassive
+    ascension: GenshinAscensionMaterial
+    stats: GenshinStatistics
     location: str
