@@ -44,6 +44,7 @@ class Ganyu(lightbulb.BotApp):
         self.genshin_wishes = Document(self.genshin_db, 'wishes')
         self.genshin_weapons = Document(self.genshin_db, 'weapons')
         self.genshin_weapons_list = []
+        self.genshin_emojis = read_json('data/emojis/material_emojis.json')
 
         intents = (
             hikari.Intents.GUILDS
