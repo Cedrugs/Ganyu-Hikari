@@ -1,4 +1,4 @@
-from utils.models import CommandExtra
+from utils.models import CommandExtra, PartialCommand
 
 
 import datetime
@@ -35,7 +35,7 @@ def format_uptime(startuptime: datetime) -> str:
     )
 
 
-def get_syntax(command: t.Union[lightbulb.Command, lightbulb.CommandLike]) -> str:
+def get_syntax(command: t.Union[lightbulb.Command, lightbulb.CommandLike, PartialCommand]) -> str:
     """
     A function to get syntax from CommandLike object
     Params:
@@ -51,6 +51,9 @@ def get_syntax(command: t.Union[lightbulb.Command, lightbulb.CommandLike]) -> st
         params.append(f"[{key}]" if not value.required else f"<{key}>")
 
     param = " ".join(params)
+
+    if command.parent:
+        return f'{command.parent.name} {command.name} {param}'
 
     return command.name if param == '' else f'{command.name} {param}'
 
