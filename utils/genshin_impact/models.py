@@ -1,7 +1,16 @@
 from dataclasses import dataclass
 
 
-__all__ = ('GenshinWeapon', 'GenshinStatistics', 'GenshinAscensionMaterial', 'GenshinWeaponPassive')
+__all__ = (
+    'GenshinWeapon', 'GenshinStatistics', 'GenshinAscensionMaterial', 'GenshinWeaponPassive', 'WeaponButtonType'
+)
+
+
+@dataclass(frozen=True)
+class WeaponButtonType:
+    details: int = 'details'
+    ascension: int = 'ascension'
+    statistic: int = 'statistic'
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,6 @@
-from utils import Colour, Paginator, ValueView
+from utils import Colour, Paginator, WeaponPaginator, WeaponButtonType
 from utils.collections import chinese_ps_script, global_ps_script, CONSUME_REST, banner_code
-from utils.genshin_impact import get_weapon_info, get_wish, GenshinWeapon
+from utils.genshin_impact import get_wish
 
 
 import hikari
@@ -8,7 +8,6 @@ import lightbulb
 import logging
 import tabulate
 import genshin
-import miru
 
 
 genshin_ext = lightbulb.Plugin('Genshin Impact')
@@ -66,7 +65,7 @@ async def wish_cmd(ctx: lightbulb.Context) -> None:
 
 @lightbulb.option('authkey', 'Authkey you need in order to fetch wish history', required=True, modifier=CONSUME_REST)
 @genshin_ext.command
-@wish_cmd.child
+@wish_cmd.child()
 @lightbulb.command(
     name='update',
     aliases=['renew', 'setup'],
@@ -98,7 +97,7 @@ async def wish_update(ctx: lightbulb.Context) -> None:
 
 
 @genshin_ext.command
-@wish_cmd.child
+@wish_cmd.child()
 @lightbulb.command(
     name='authkey',
     aliases=['key'],
@@ -142,51 +141,16 @@ async def weapon_group(ctx: lightbulb.Context, weapon_name=None) -> None:
     """Example: {prefix}weapon amos bow"""
     weapon_name = ctx.options.weapon_name or weapon_name
 
-    data = await get_weapon_info(weapon_name, ctx.bot.genshin_weapons, ctx.bot.genshin_weapons_list)
-
-    if not data:
+    paginator = WeaponPaginator(ctx, weapon_name, WeaponButtonType.details)
+    if not paginator:
         return await ctx.respond(f'{weapon_name} was not found.')
 
-    fields = [
-        ("Rarity", f"{data.rarity}★", True),
-        ("Base Attack", data.base_atk, True),
-        ("Type", data.type, True),
-        (f"Passive ({data.passive.name})", data.passive.description, False),
-        ("Substat", data.substat, True),
-        ("Max Level", data.max_level, True),
-        ("Obtainable from", data.location, False)
-    ]
-
-    embed = hikari.Embed(title=data.name, description=data.description, colour=Colour.blue)
-    embed.set_thumbnail(data.icon)
-    embed.set_footer(text='This bot is still under development, search results may not be precise.')
-
-    for name, value, inline in fields:
-        embed.add_field(name=name, value=value, inline=inline)
-
-    view = ValueView(
-        buttons=[
-            miru.Button(label='Ascension Material', custom_id='weapon ascension', style=2),
-            miru.Button(label='Statistics', custom_id='weapon statistic', style=2)
-        ],
-        delete_after_respond=True,
-        disable_after_timeout=True
-    )
-
-    message = await ctx.respond(embed=embed, components=view.build())
-    view.start(await message.message())
-    await view.wait()
-
-    if not view.value:
-        return
-
-    command = ctx.bot.get_prefix_command(view.value)
-    await command.invoke(ctx, weapon_name=data.name)
+    await paginator.start()
 
 
+@weapon_group.child()
 @lightbulb.option('weapon_name', 'Name of the weapon you want to see the details', default=None, modifier=CONSUME_REST)
 @genshin_ext.command
-@weapon_group.child
 @lightbulb.command(
     name='statistic',
     aliases=['statistics', 'stats', 'stat', 's'],
@@ -197,41 +161,16 @@ async def weapon_statistic(ctx: lightbulb.Context, weapon_name=None) -> None:
     """Example: {prefix}weapon statistic amos bow"""
     weapon_name = ctx.options.weapon_name or weapon_name
 
-    data = await get_weapon_info(weapon_name, ctx.bot.genshin_weapons, ctx.bot.genshin_weapons_list)
-
-    if not data:
+    paginator = WeaponPaginator(ctx, weapon_name, WeaponButtonType.statistic)
+    if not paginator:
         return await ctx.respond(f'{weapon_name} was not found.')
 
-    embed = hikari.Embed(
-        title=data.name,
-        colour=Colour.blue,
-        description=f'{data.description}\n\n**Statistic Progression: {data.substat}**'
-    )
-    embed.set_image(data.stats.visual)
-
-    view = ValueView(
-        buttons=[
-            miru.Button(label='Details', custom_id='weapon', style=2),
-            miru.Button(label='Ascension Material', custom_id='weapon ascension', style=2)
-        ],
-        delete_after_respond=True,
-        disable_after_timeout=True
-    )
-
-    message = await ctx.respond(embed=embed, components=view.build())
-    view.start(await message.message())
-    await view.wait()
-
-    if not view.value:
-        return
-
-    command = ctx.bot.get_prefix_command(view.value)
-    await command.invoke(ctx, weapon_name=data.name)
+    await paginator.start()
 
 
 @lightbulb.option('weapon_name', 'Name of the weapon you want to see the details', default=None, modifier=CONSUME_REST)
 @genshin_ext.command
-@weapon_group.child
+@weapon_group.child()
 @lightbulb.command(
     name='ascension',
     aliases=['asc', 'a'],
@@ -241,47 +180,11 @@ async def weapon_statistic(ctx: lightbulb.Context, weapon_name=None) -> None:
 async def weapon_ascension(ctx: lightbulb.Context, weapon_name=None):
     weapon_name = ctx.options.weapon_name or weapon_name
 
-    data = await get_weapon_info(weapon_name, ctx.bot.genshin_weapons, ctx.bot.genshin_weapons_list)
+    paginator = WeaponPaginator(ctx, weapon_name, WeaponButtonType.ascension)
+    if not paginator:
+        return await ctx.respond(f'{weapon_name} was not found.')
 
-    icons = ctx.bot.genshin_emojis
-    icon = lambda x: icons[x.lower().replace(' ', '').replace("'", "").replace('-', '')]
-
-    fields = []
-
-    for level in data.ascension.levels.keys():
-        material = [[list(item.keys())[0], list(item.values())[0]] for item in data.ascension.levels[level]]
-
-        fields.append(
-            (f'Ascension Phase {level[-1:]}', '\n'.join([f' - {icon(x[0])} {x[1]} {x[0]}' for x in material]), False)
-        )
-
-    summary = [[item, data.ascension.summary[item]] for item in data.ascension.summary]
-    fields.append(('Summary', '\n'.join([f' - {icon(x[0])} {x[0]} {x[1]}' for x in summary]), False))
-
-    embed = hikari.Embed(title=f'{data.name} Ascension Materials', description=data.description, colour=Colour.blue)
-    embed.set_thumbnail(data.icon)
-
-    for name, value, inline in fields:
-        embed.add_field(name=name, value=value, inline=inline)
-
-    view = ValueView(
-        buttons=[
-            miru.Button(label='Details', custom_id='weapon', style=2),
-            miru.Button(label='Statistic', custom_id='weapon statistic', style=2)
-        ],
-        delete_after_respond=True,
-        disable_after_timeout=True
-    )
-
-    message = await ctx.respond(embed=embed, components=view.build())
-    view.start(await message.message())
-    await view.wait()
-
-    if not view.value:
-        return
-
-    command = ctx.bot.get_prefix_command(view.value)
-    await command.invoke(ctx, weapon_name=data.name)
+    await paginator.start()
 
 
 def load(bot: lightbulb.BotApp) -> None:
