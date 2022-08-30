@@ -61,7 +61,8 @@ class Ganyu(lightbulb.BotApp):
             owner_ids=owner_ids,
             prefix='>',
             intents=intents,
-            help_class=None
+            help_class=None,
+            default_enabled_guilds=[808666367208718376]
         )
 
         miru.load(self)
