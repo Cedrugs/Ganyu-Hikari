@@ -2,6 +2,7 @@ Ganyu-Hikari
 ==============
 
 This is a Python Discord Bot, coded using lightbulb-hikari library, and meant to help people with in-game stats, wish histories, and daily reward claiming.
+Fyi, i coded this bot without any experience with Genshin Impact. But now that I've played the game for a while, and with the help of friends, everything should be working fine. But any bug reports are really appreciated.
 
 >[**Click Here**](https://discord.com/api/oauth2/authorize?client_id=855340983625580544&permissions=277025769536&scope=bot%20applications.commands) to invite Ganyu to your server.
 
