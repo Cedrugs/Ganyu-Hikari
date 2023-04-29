@@ -13,37 +13,72 @@ help_ext.add_checks(lightbulb.guild_only)
 logger = logging.getLogger(__name__)
 
 
-# @lightbulb.option('command_name', "The command/category you want to ask for help", default=None, modifier=CONSUME_REST)
-# @help_ext.command
-# @lightbulb.command('help', "A list of Ganyu's command or help for specific command")
-# @lightbulb.implements(lightbulb.PrefixCommand)
-# async def help_cmd(ctx: lightbulb.Context) -> None:
-#     """Example: {prefix}help wish"""
-#     command_name = ctx.options.command_name
-#     bot = ctx.bot
-#     if not command_name:
-#         embed = hikari.Embed(
-#             color=Colour.blue,
-#             description=f"For more detailed help, use `{ctx.prefix}help <command>`"
-#         )
-#
-#         embed.set_author(name="Ganyu's command list", icon=bot.get_me().avatar_url)
-#         embed.set_footer(text=f'Requested by {ctx.author}')
-#
-#         plugins = bot.plugins
-#         plugins.pop('Error')
-#         plugins.pop('Help')
-#
-#         # Help and error is removed because there's no command on help plugin and we don't want to show help command.
-#
-#         fields = [
-#             (plugin.name, ", ".join([f'`{x.name}`' for x in bot.d.commands[plugin.name]]), False)
-#             for plugin in list(plugins.values())
-#         ]
-#
-#         for name, value, inline in fields:
-#             embed.add_field(name=name, value=value, inline=inline)
-#         await ctx.respond(embed=embed)
+@lightbulb.option(
+    name='command_name',
+    description='The name of the command you are looking help for',
+    default=None,
+    required=False
+)
+@help_ext.command
+@lightbulb.command(
+    name='help',
+    description="List of Ganyu's command or help for specific command"
+)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def custom_help(ctx: lightbulb.Context) -> None | lightbulb.ResponseProxy:
+    command_name = ctx.options.command_name
+    bot = ctx.bot
+
+    if not command_name:
+        embed = hikari.Embed(
+            color=Colour.blue,
+            description='For more detailed help, consider using `/help <command>`'
+        )
+
+        embed.set_author(name="Ganyu's commands", icon=bot.get_me().avatar_url)
+        embed.set_footer(text='DM @cedric#8394 for more help')
+
+        plugins = bot.plugins
+        for plugin in ['Help', 'Error', 'Tasks']:
+            plugins.pop(plugin)
+
+        fields = [
+            (plugin.name, ", ".join([f'`{x.name}`' for x in bot.d.commands[plugin.name]]), False)
+            for plugin in list(plugins.values())
+        ]
+
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
+
+        await ctx.respond(embed=embed)
+    else:
+        command_name_split = command_name.split(' ')
+        command = bot.get_slash_command(command_name_split[0])
+
+        if len(command_name_split) > 1:
+            command = command.get_subcommand(command_name_split[1])
+
+        if not command:
+            return await ctx.respond(f"Sorry but there's no help for `{command_name}")
+
+        embed = hikari.Embed(
+            title=f'Help for {f"{command.parent.name} {command.name}" if command.is_subcommand else command.name}',
+            color=Colour.blue,
+            description=command.description if command.description else 'No description for this command'
+        )
+
+        example = f'```/{get_syntax(command)}```'
+
+        fields = [
+            ('Usage', f'`{get_syntax(command)}`', True),
+            ('Example', example, False)
+        ]
+
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
+
+        await ctx.respond(embed=embed)
+
 #     else:
 #         hidden_ext = ['Error', 'Help']
 #         if (ext := command_name.lower()) in (name.lower() for name in bot.plugins.keys() if name not in hidden_ext):
