@@ -1,0 +1,6 @@
+hikari
+hikari-lightbulb
+hikari-miru
+genshin
+asyncio-nest
+pytz
