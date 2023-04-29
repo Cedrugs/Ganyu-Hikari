@@ -9,7 +9,7 @@ import typing as t
 import lightbulb
 
 
-__all__ = ('HelpView', 'Paginator', 'WeaponPaginator')
+__all__ = ('HelpView', 'Paginator', 'WeaponPaginator', 'DailySetupView')
 
 
 class WeaponPaginator(miru.View):
@@ -199,3 +199,42 @@ class Paginator(nav.NavigatorView):
             result_embeds.append(embed)
 
         return result_embeds
+
+
+class DailySetupButton(miru.Modal):
+
+    ltuid = miru.TextInput(label="LTUID", required=True, style=hikari.TextInputStyle.PARAGRAPH)
+    ltoken = miru.TextInput(label="LTOKEN", required=True, style=hikari.TextInputStyle.PARAGRAPH)
+
+    async def callback(self, ctx: miru.ModalContext) -> None:
+        await ctx.respond('Thank you! Your cookie will be processed.', flags=hikari.MessageFlag.EPHEMERAL)
+
+
+class DailySetupView(miru.View):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.modal = modal = DailySetupButton(title='Hoyolab Daily Checkin Claimer Setup', timeout=120)
+        self.ltuid = None
+        self.ltoken = None
+        self.timed_out = False
+
+    @miru.button(label="Start!", style=hikari.ButtonStyle.PRIMARY)
+    async def modal_button(self, button: miru.Button, ctx: miru.ViewContext) -> None:
+
+        await self.modal.send(ctx.interaction)
+        await self.modal.wait(timeout=60)
+
+        self.ltuid = list(self.modal.values.values())[0]
+        self.ltoken = list(self.modal.values.values())[1]
+
+        self.modal.stop()
+        self.stop()
+
+    async def on_timeout(self) -> None:
+        for item in self.children:
+            item.disabled = True
+
+        self.timed_out = True
+        self.modal.stop()
+        await self.message.edit(components=self)
