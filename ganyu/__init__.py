@@ -3,7 +3,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
 from glob import glob
 from .database import Document
-
+from lightbulb.ext import tasks as ts
+from .extensions.tasks import Tasks
 
 import lightbulb
 import hikari
@@ -11,6 +12,7 @@ import logging
 import asyncio
 import miru
 import utils as ut
+import nest_asyncio
 
 
 logger = logging.getLogger(__name__)
@@ -34,9 +36,11 @@ class Extension(object):
 class Ganyu(lightbulb.BotApp):
 
     def __init__(self):
+        nest_asyncio.apply()
         self._ready = False
         self._extension_ready = Extension
         self.startup_time = None
+        self.loaded_tasks = []
 
         self.mongo = AsyncIOMotorClient(read_json('config.json')['mongodbConnection'])
         self.genshin_db = self.mongo['genshinImpact']
@@ -46,11 +50,11 @@ class Ganyu(lightbulb.BotApp):
         self.genshin_weapons_list = []
         self.genshin_emojis = read_json('data/emojis/material_emojis.json')
 
+        self.genshin_cookies = Document(self.genshin_db, 'cookies')
+        self.genshin_daily_rewards = Document(self.genshin_db, 'daily_rewards')
+
         intents = (
-            hikari.Intents.GUILDS
-            | hikari.Intents.ALL_MESSAGE_REACTIONS
-            | hikari.Intents.ALL_MESSAGES
-            | hikari.Intents.GUILD_MEMBERS
+            hikari.Intents.ALL
         )
 
         token = read_json('config.json')['token']
@@ -59,13 +63,13 @@ class Ganyu(lightbulb.BotApp):
         super().__init__(
             token=token,
             owner_ids=owner_ids,
-            prefix='>',
+            prefix='.',
             intents=intents,
-            help_class=None,
+            # help_class=None,
             default_enabled_guilds=[808666367208718376]
         )
 
-        miru.load(self)
+        miru.install(self)
 
     def build(self) -> None:
 
@@ -75,6 +79,8 @@ class Ganyu(lightbulb.BotApp):
 
         self.setup_extensions()
         self.extension_commands()
+
+        ts.load(bot)
 
         self.run(activity=hikari.Activity(
                 name='>help | Running on lightbulb hikari',
@@ -111,6 +117,13 @@ class Ganyu(lightbulb.BotApp):
 
         self.d.commands = all_commands
 
+    def setup_tasks(self) -> None:
+        tasks = [getattr(Tasks, method) for method in dir(Tasks) if method.startswith('__') is False]
+        for task in tasks:
+            task.start()
+            logger.info(f"Loaded task 'tasks.{task.__name__}'")
+            self.loaded_tasks.append(task.__name__)
+
     def setup_extensions(self) -> None:
         if not extensions_path:
             logger.info('No extensions to load')
@@ -135,6 +148,7 @@ class Ganyu(lightbulb.BotApp):
         self.genshin_weapons_list = [x['_id'] for x in await self.genshin_weapons.get_all()]
 
         logger.info(f'Bot started and connected to {self.get_me()} ({self.heartbeat_latency*1000:.2f}ms)')
+        self.setup_tasks()
 
     async def on_message(self, event: lightbulb.CommandInvocationEvent) -> None:
         if not event.context.author.is_bot and event.context.command and not self._ready:
