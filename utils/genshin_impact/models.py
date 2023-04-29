@@ -1,8 +1,10 @@
+import datetime
 from dataclasses import dataclass
 
 
 __all__ = (
-    'GenshinWeapon', 'GenshinStatistics', 'GenshinAscensionMaterial', 'GenshinWeaponPassive', 'WeaponButtonType'
+    'GenshinWeapon', 'GenshinStatistics', 'GenshinAscensionMaterial', 'GenshinWeaponPassive', 'WeaponButtonType',
+    'DailyRewardInfo'
 )
 
 
@@ -47,3 +49,11 @@ class GenshinWeapon:
     ascension: GenshinAscensionMaterial
     stats: GenshinStatistics
     location: str
+
+
+@dataclass(frozen=True)
+class DailyRewardInfo:
+    claimed_rewards: int
+    missed_rewards: int
+    last_claimed_rewards: dict
+    claim_time: datetime.datetime
