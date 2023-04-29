@@ -1,10 +1,13 @@
-from .models import GenshinWeapon, GenshinStatistics, GenshinAscensionMaterial, GenshinWeaponPassive
+from .models import GenshinWeapon, GenshinStatistics, GenshinAscensionMaterial, GenshinWeaponPassive, DailyRewardInfo
+from datetime import datetime, timedelta
 
 import genshin
 import difflib
+import asyncio
+import pytz
 
 
-__all__ = ('get_wish', 'get_weapon_info', 'get_character_info')
+__all__ = ('get_wish', 'get_weapon_info', 'get_character_info', 'Hoyolab')
 
 
 banner_dict = {
@@ -104,3 +107,40 @@ async def get_character_info(key: str, collection, character_key):
     if not character_name:
         return None
     return await collection.find_by_id(character_name[0])
+
+
+class Hoyolab:
+
+    def __init__(self, ltuid, ltoken) -> None:
+        self.ltuid = ltuid
+        self.ltoken = ltoken
+        self.client = genshin.Client({"ltuid": self.ltuid, "ltoken": self.ltoken}, game=genshin.Game.GENSHIN)
+
+        self.valid_cookie = False
+        self.check_cookie()
+
+    def check_cookie(self) -> None:
+        try:
+            loop = asyncio.get_running_loop()
+            loop.run_until_complete(self.client.get_game_accounts())
+        except ValueError:
+            return
+        except genshin.InvalidCookies:
+            return
+        self.valid_cookie = True
+
+    async def get_daily_check_in_info(self) -> DailyRewardInfo:
+        rewards_basic_info = await self.client.get_reward_info()
+        reward_all = await self.client.claimed_rewards()
+
+        rewards = reward_all[-1] if rewards_basic_info.claimed_rewards == 1 and len(reward_all) > 1 else reward_all[0]
+
+        return DailyRewardInfo(
+            claimed_rewards=rewards_basic_info.claimed_rewards,
+            missed_rewards=rewards_basic_info.missed_rewards,
+            last_claimed_rewards={'name': rewards.name, 'amount': rewards.amount},
+            claim_time=rewards.time.astimezone(tz=pytz.utc)
+        )
+
+    async def check_in(self) -> genshin.models.DailyReward:
+        return await self.client.claim_daily_reward()
