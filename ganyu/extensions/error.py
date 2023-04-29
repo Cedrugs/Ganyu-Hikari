@@ -11,7 +11,7 @@ async def on_error(event: lightbulb.CommandErrorEvent) -> None:
     if isinstance(event.exception, lightbulb.OnlyInGuild):
         pass
     elif isinstance(event.exception, lightbulb.CommandInvocationError):
-        logger.error(event.exception.original)
+        logger.error(f'{type(event.exception.original)} {event.exception.original}')
     elif isinstance(event.exception, lightbulb.NotEnoughArguments):
         missing_options = ', '.join([f'`{x.name}`' for x in event.exception.missing_options])
         await event.context.respond(f'You are missing required argument: {missing_options}.')
