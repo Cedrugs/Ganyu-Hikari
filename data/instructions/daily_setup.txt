@@ -1,0 +1,13 @@
+In order to set up the hoyolab daily check-in claimer, you have to provide us your cookie.
+
+**What is cookie?**
+Cookies are the default form of authentication over the majority of Mihoyo APIs.
+For authentication, you will need to send two cookies: `ltuid` and `ltoken.` ltuid is your hoyolab UID and ltoken is a unique token used for the actual authentication.
+
+For more information about security & cookie please [read this](https://github.com/thesadru/genshinstats#is-it-possible-that-my-account-can-be-stolen-when-i-login-with-the-cookie).
+
+**1**. Go to hoyolab.com.
+**2**. Login to your account.
+**3**. Press F12 to open Inspect Mode (ie. Developer Tools).
+**4**. Go to Application, Cookies, https://www.hoyolab.com.
+**5**. Copy ltuid and ltoken.
