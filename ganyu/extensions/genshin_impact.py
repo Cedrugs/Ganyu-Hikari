@@ -190,7 +190,6 @@ logger = logging.getLogger(__name__)
 @genshin_ext.command
 @lightbulb.command(
     name='daily',
-    aliases=['d'],
     description='Hoyolab daily check-in'
 )
 @lightbulb.implements(lightbulb.SlashCommandGroup)
