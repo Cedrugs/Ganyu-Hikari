@@ -1,4 +1,4 @@
-from utils import Colour, HelpView, get_syntax, arg_type, get_command_extra, CONSUME_REST
+from utils import Colour, get_syntax, arg_type, get_command_extra
 
 
 import logging
@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
     name='command_name',
     description='The name of the command you are looking help for',
     default=None,
-    required=False
+    required=False,
+    type=str
 )
 @help_ext.command
 @lightbulb.command(
@@ -25,7 +26,8 @@ logger = logging.getLogger(__name__)
     description="List of Ganyu's command or help for specific command"
 )
 @lightbulb.implements(lightbulb.SlashCommand)
-async def custom_help(ctx: lightbulb.Context) -> None | lightbulb.ResponseProxy:
+async def help(ctx: lightbulb.Context) -> None | lightbulb.ResponseProxy:
+    """Example: help daily info"""
     command_name = ctx.options.command_name
     bot = ctx.bot
 
@@ -67,72 +69,41 @@ async def custom_help(ctx: lightbulb.Context) -> None | lightbulb.ResponseProxy:
             description=command.description if command.description else 'No description for this command'
         )
 
+        docstring = command.callback.__doc__
         example = f'```/{get_syntax(command)}```'
 
         fields = [
-            ('Usage', f'`{get_syntax(command)}`', True),
-            ('Example', example, False)
+            ('Usage', f'`{get_syntax(command)}`', True)
         ]
+
+        if command.options:
+            options = command.options.values()
+            text = '\n'.join(
+                f'`{x.name.replace("_", " ")}`: {x.description} ({arg_type[str(x.arg_type)]})' for x in options
+            )
+
+            fields.append(('Options', text, False))
+
+        if docstring:
+            extra = get_command_extra(docstring)
+
+            if extra.example:
+                example = f'```/{extra.example}```'
+
+            else:
+                fields.append(('Example', example, False))
+
+            if extra.notes:
+                fields.append(('Notes', extra.notes.format(prefix=ctx.prefix), False))
+
+        fields.append(('Example', example, False))
 
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
 
-        await ctx.respond(embed=embed)
+        embed.set_footer(text="💡 [] sign for optional and <> sign for required.")
 
-#     else:
-#         hidden_ext = ['Error', 'Help']
-#         if (ext := command_name.lower()) in (name.lower() for name in bot.plugins.keys() if name not in hidden_ext):
-#             commands = [cmd for cmd in bot.d.commands[ext.title()]]
-#
-#             view = HelpView(source=commands, title=f'Help for {ext.title()}', color=Colour.blue, page=5)
-#             await view.send(ctx.channel_id)
-#         else:
-#             command = bot.get_prefix_command(command_name)
-#
-#             if not command:
-#                 return await ctx.respond(f"Sorry but, there's no help for `{command_name}`")
-#
-#             docstring = command.callback.__doc__
-#             example = f'```{ctx.prefix}{get_syntax(command)}```'
-#
-#             embed = hikari.Embed(
-#                 title=f'Help for {command.name}', color=Colour.blue,
-#                 description=command.description if command.description else 'No description for this command'
-#             )
-#
-#             fields = [
-#                 ('Usage', f'`{get_syntax(command)}`', True),
-#                 ('Aliases', ', '.join(f"`{x}`" for x in command.aliases) if command.aliases else '`None`', True)
-#             ]
-#
-#             if command.options:
-#                 options = command.options.values()
-#
-#                 text = '\n'.join(
-#                     f'`{x.name.replace("_", " ")}`: {x.description} ({arg_type[str(x.arg_type)]})' for x in options
-#                 )
-#
-#                 fields.append(('Options', text, False))
-#
-#             if docstring:
-#                 extra = get_command_extra(docstring)
-#
-#                 if extra.example:
-#                     example = f'```{extra.example.format(prefix=ctx.prefix)}```'
-#
-#                 else:
-#                     fields.append(('Example', example, False))
-#
-#                 if extra.notes:
-#                     fields.append(('Notes', extra.notes.format(prefix=ctx.prefix), False))
-#
-#             fields.append(('Example', example, False))
-#
-#             for name, value, inline in fields:
-#                 embed.add_field(name=name, value=value, inline=inline)
-#
-#             embed.set_footer(text="💡 [] sign for optional and <> sign for required.")
-#             await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed)
 
 
 def load(bot: lightbulb.BotApp) -> None:
