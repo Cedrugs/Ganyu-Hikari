@@ -11,7 +11,6 @@ import hikari
 import logging
 import asyncio
 import miru
-import utils as ut
 import nest_asyncio
 
 
@@ -78,7 +77,6 @@ class Ganyu(lightbulb.BotApp):
         self.subscribe(lightbulb.CommandInvocationEvent, self.on_message)
 
         self.setup_extensions()
-        self.extension_commands()
 
         ts.load(bot)
 
@@ -86,36 +84,6 @@ class Ganyu(lightbulb.BotApp):
                 name='>help | Running on lightbulb hikari',
                 type=hikari.ActivityType.PLAYING)
         )
-
-    def extension_commands(self):
-        extensions = [self.get_plugin(x) for x in self.plugins]
-
-        all_commands = {}
-
-        for extension in extensions:
-
-            commands = [
-                ut.PartialCommand(name=x.name, description=x.description, is_subcommand=False, options=x.options)
-                for x in extension.all_commands if isinstance(x, lightbulb.PrefixCommand)
-            ]
-
-            commands_w_sub = [x for x in extension.raw_commands]
-
-            for command in commands_w_sub:
-                if command.subcommands:
-                    for cmd in command.subcommands:
-                        commands.append(
-                            ut.PartialCommand(
-                                name=f'{command.name} {cmd.name}',
-                                description=cmd.description,
-                                options=cmd.options,
-                                is_subcommand=True
-                            )
-                        )
-
-            all_commands.update({extension.name: commands})
-
-        self.d.commands = all_commands
 
     def setup_tasks(self) -> None:
         tasks = [getattr(Tasks, method) for method in dir(Tasks) if method.startswith('__') is False]
