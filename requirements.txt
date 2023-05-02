@@ -2,5 +2,7 @@ hikari
 hikari-lightbulb
 hikari-miru
 genshin
-asyncio-nest
+nest-asyncio
 pytz
+motor
+tabulate
