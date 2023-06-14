@@ -6,6 +6,7 @@ from .database import Document
 from lightbulb.ext import tasks as ts
 from .extensions.tasks import Tasks
 
+import utils as ut
 import lightbulb
 import hikari
 import logging
@@ -77,6 +78,7 @@ class Ganyu(lightbulb.BotApp):
         self.subscribe(lightbulb.CommandInvocationEvent, self.on_message)
 
         self.setup_extensions()
+        self.get_extension_commands()
 
         ts.load(bot)
 
@@ -100,6 +102,37 @@ class Ganyu(lightbulb.BotApp):
                 self.load_extensions(f'ganyu.extensions.{ext}')
             except Exception as exc:
                 logger.error(msg=f'Error while loading ganyu.extensions.{ext}', exc_info=exc)
+
+    def get_extension_commands(self):
+        extensions = [self.get_plugin(x) for x in self.plugins]
+
+        all_commands = {}
+
+        for extension in extensions:
+
+            commands = [
+                ut.PartialCommand(name=x.name, description=x.description, is_subcommand=False, options=x.options)
+                for x in extension.all_commands if isinstance(x, lightbulb.PrefixCommand)
+            ]
+
+            commands_w_sub = [x for x in extension.raw_commands]
+
+            for command in commands_w_sub:
+                if command.subcommands:
+                    for cmd in command.subcommands:
+                        commands.append(
+                            ut.PartialCommand(
+                                name=f'{command.name} {cmd.name}',
+                                description=cmd.description,
+                                options=cmd.options,
+                                is_subcommand=True
+                            )
+                        )
+
+            all_commands.update({extension.name: commands})
+
+        self.d.commands = all_commands
+
 
     @staticmethod
     async def on_starting(event: hikari.StartingEvent) -> None:
