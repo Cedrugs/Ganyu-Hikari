@@ -1,4 +1,5 @@
 from utils import Colour, get_syntax, arg_type, get_command_extra
+from copy import copy
 
 
 import logging
@@ -40,11 +41,7 @@ async def help(ctx: lightbulb.Context) -> None | lightbulb.ResponseProxy:
         embed.set_author(name="Ganyu's commands", icon=bot.get_me().avatar_url)
         embed.set_footer(text='DM @cedric#8394 for more help')
 
-        plugins = bot.plugins
-
-        for plugin in ['Help', 'Error', 'Tasks']:
-            plugins.pop(plugin)
-
+        plugins = bot.accessible_plugins
 
         fields = [
             (plugin.name, ", ".join([f'`{x.name}`' for x in bot.d.commands[plugin.name]]), False)

@@ -1,3 +1,5 @@
+import copy
+
 from utils.json import *
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
@@ -53,6 +55,8 @@ class Ganyu(lightbulb.BotApp):
         self.genshin_cookies = Document(self.genshin_db, 'cookies')
         self.genshin_daily_rewards = Document(self.genshin_db, 'daily_rewards')
 
+        self.accessible_plugins = None
+
         intents = (
             hikari.Intents.ALL
         )
@@ -66,7 +70,6 @@ class Ganyu(lightbulb.BotApp):
             prefix='.',
             intents=intents,
             help_class=None,
-            default_enabled_guilds=[808666367208718376]
         )
 
         miru.install(self)
@@ -133,6 +136,11 @@ class Ganyu(lightbulb.BotApp):
 
         self.d.commands = all_commands
 
+    def setup_accessible_plugins(self):
+        self.accessible_plugins = copy.copy(bot.plugins)
+
+        for plugin in ('Help', 'Tasks', 'Error'):
+            self.accessible_plugins.pop(plugin)
 
     @staticmethod
     async def on_starting(event: hikari.StartingEvent) -> None:
@@ -150,6 +158,7 @@ class Ganyu(lightbulb.BotApp):
 
         logger.info(f'Bot started and connected to {self.get_me()} ({self.heartbeat_latency*1000:.2f}ms)')
         self.setup_tasks()
+        self.setup_accessible_plugins()
 
     async def on_message(self, event: lightbulb.CommandInvocationEvent) -> None:
         if not event.context.author.is_bot and event.context.command and not self._ready:
