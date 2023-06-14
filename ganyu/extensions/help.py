@@ -41,8 +41,10 @@ async def help(ctx: lightbulb.Context) -> None | lightbulb.ResponseProxy:
         embed.set_footer(text='DM @cedric#8394 for more help')
 
         plugins = bot.plugins
+
         for plugin in ['Help', 'Error', 'Tasks']:
             plugins.pop(plugin)
+
 
         fields = [
             (plugin.name, ", ".join([f'`{x.name}`' for x in bot.d.commands[plugin.name]]), False)
